@@ -1,6 +1,15 @@
 # Prerequisites
 *.d
 
+# Configuration files
+*.json
+
+# Debug files
+*.out
+
+# Matrix files
+*.txt
+
 # Object files
 *.o
 *.ko
