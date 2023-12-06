@@ -1,11 +1,11 @@
 #include "ra.h"
 #include "arnoldi.h"
 #include "tools.h"
-#include <bsd/stdlib.h>
 #include <cblas.h>
 #include <lapack.h>
 #include <lapacke.h>
 #include <math.h>
+#include <stdlib.h>
 
 // Compare function
 static int
@@ -39,7 +39,7 @@ ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
     cblas_dcopy (m * (m + 1), _h, 1, __h, 1);
 
     // Compute the eigenvalues of the Hessenberg matrix H
-    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, __h, m, _wr, _wi, NULL, 1,
+    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, __h, m, _wr, _wi, NULL, m,
                    _ym, m);
 
     // Computing Um = Vm Ym
@@ -57,7 +57,7 @@ ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
             w[i].index = i;
             w[i].err = fabs (h_err * _ym[m * (m - 1) + i]);
         }
-    heapsort (w, m, sizeof (*w), cmp);
+    qsort (w, m, sizeof (*w), cmp);
 
     // Computing the errors on the s first eigenvalues
     double err_ = 0.0F;

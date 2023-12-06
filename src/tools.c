@@ -25,7 +25,11 @@ read_matrix (const char *filename, size_t *restrict n)
         }
 
     // Reading the dimension of the matrix
-    fscanf (f, " %lu", n);
+    if (fscanf (f, " %lu", n))
+        {
+            fprintf (stderr, "Error: missing matrix dimension\n");
+            exit (EXIT_FAILURE);
+        }
     ALLOC (mat, *n * *n);
 
     for (size_t i = 0; i < *n * *n; ++i)
