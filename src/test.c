@@ -2,8 +2,8 @@
 #include "tools.h"
 #include <string.h>
 
-void
-load_mat_diag (size_t n, double *A)
+static inline void
+load_mat_diag (size_t n, double *restrict A)
 {
     for (int i = 0; i < n; i++)
         {
@@ -13,8 +13,8 @@ load_mat_diag (size_t n, double *A)
         }
 }
 
-void
-load_mat_tri (size_t n, double *A)
+static inline void
+load_mat_tri (size_t n, double *restrict A)
 {
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
@@ -23,13 +23,13 @@ load_mat_tri (size_t n, double *A)
     for (int i = 0; i < n; i++)
         {
             for (int j = i; j < n; j++)
-                A[i * n + j] = j;
+                A[i * n + j] = rand () % 10;
             A[i * n + i] = i + 1;
         }
 }
 
-void
-load_mat_b (size_t n, double *A)
+static inline void
+load_mat_b (size_t n, double *restrict A)
 {
 
     for (int i = 0; i < n; i++)
@@ -53,45 +53,52 @@ load_mat_b (size_t n, double *A)
     A[n * n - 1] = a;
 }
 
-void
+static inline void
 usage (const char *restrict bin)
 {
-    fprintf (stderr,
-             "usage: %s n m s iter_max algo\n"
-             "with algo in: b, random, diag or tri\n",
-             bin);
+    fprintf (
+        stderr,
+        "usage: %s n m s iter_max algo tol\n\n"
+        "with:\n"
+        "- n        the target matrix dimension\n"
+        "- m        the projection space dimension\n"
+        "- s        the number of eigenvalues to estimate\n"
+        "- iter_max the maximum number of iterations\n"
+        "- algo     the matrix generation algo in: b, random, diag or tri\n"
+        "- tol      the solution tolerance\n",
+        bin);
 }
 
 int
 main (int argc, char *argv[])
 {
     size_t n, m, s, iter_max;
-    double *restrict A, *restrict v, *restrict u;
+    double *restrict A, *restrict v, *restrict u, tol;
     eigen_infos *restrict w;
     char *restrict algo;
 
     //
-    if (argc != 6)
+    if (argc != 7)
         return usage (*argv), 255;
+
+    //
     n = atol (argv[1]);
     m = atol (argv[2]);
     s = atol (argv[3]);
     iter_max = atol (argv[4]);
     algo = argv[5];
+    if (!sscanf (argv[6], " %lf", &tol) || !n || !s || !m || !iter_max)
+        {
+            fprintf (stderr, "Error: wrong argument values\n");
+            return 254;
+        }
 
     //
     if (m > n || s > m)
-        return fprintf (stderr, "s <= m <= n\n"), 254;
+        return fprintf (stderr, "s <= m <= n\n"), 253;
 
-    //
+    // Generating the matrix A
     ALLOC (A, n * n);
-    ALLOC (u, m * n);
-    ALLOC (v, n * (m + 1));
-    ALLOC (w, m);
-
-    //
-    fill (v, 1, n);
-
     if (!strcmp (algo, "b"))
         {
             load_mat_b (n, A);
@@ -109,12 +116,30 @@ main (int argc, char *argv[])
             load_mat_tri (n, A);
         }
     else
-        goto error;
-
-    // Calling iram
-    iram (A, v, n, s, m, iter_max, 1e-16F, w, u);
+        {
+            FREE (A);
+            return usage (*argv), 252;
+        }
 
     //
+    ALLOC (u, m * n);
+    ALLOC (v, n * (m + 1));
+    ALLOC (w, m);
+
+    // Generate vector for v
+    fill (v, 1, n);
+
+    // Calling iram
+    iram (A, &v, n, s, m, iter_max, tol, w, u);
+
+    // Print the eigenvalues
+    for (size_t i = 0; i < s; ++i)
+        printf ("# eig[%zu] : % 15.6lf + % 15.6lf j\n", i, w[i].re, w[i].im);
+
+    // Compute the residual norm
+    printf ("# res    : % 15e\n", residual_norm (A, u, w, n, s));
+
+    // Clean up
     FREE (A);
     FREE (u);
     FREE (v);
@@ -122,12 +147,4 @@ main (int argc, char *argv[])
 
     //
     return 0;
-
-error:
-    FREE (A);
-    FREE (u);
-    FREE (v);
-    FREE (w);
-
-    return usage (*argv), 255;
 }

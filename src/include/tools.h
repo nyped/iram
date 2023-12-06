@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <time.h>
 
@@ -17,8 +18,9 @@
 #define ALLOC(ptr, size)                                                      \
     do                                                                        \
         {                                                                     \
-            ptr = malloc (sizeof (*ptr) * size);                              \
-            if (!ptr)                                                         \
+            ptr = malloc (sizeof (*(ptr)) * size);                            \
+            memset ((ptr), 0, sizeof (*(ptr)) * size);                        \
+            if (!(ptr))                                                       \
                 {                                                             \
                     perror ("calloc");                                        \
                     exit (254);                                               \
@@ -29,16 +31,16 @@
 #define FREE(ptr)                                                             \
     do                                                                        \
         {                                                                     \
-            free (ptr);                                                       \
+            free ((ptr));                                                     \
         }                                                                     \
     while (0)
 
 #define SWAP_PTR(a, b)                                                        \
     do                                                                        \
         {                                                                     \
-            void *tmp = a;                                                    \
-            a = b;                                                            \
-            b = tmp;                                                          \
+            void *tmp = (a);                                                  \
+            (a) = (b);                                                        \
+            (b) = tmp;                                                        \
         }                                                                     \
     while (0)
 
@@ -56,18 +58,23 @@ typedef struct
 void fill (double *restrict v, const double a, const size_t n);
 
 // Creates a random vector
-void gen_vect (double *x, const size_t n, const size_t dx);
+void gen_vect (double *restrict x, const size_t n, const size_t dx);
 
 // Creates a family of `dim` independent vectors
 void gen_base (double *restrict v, const size_t n, const bool transpose);
 
 // Prints the matrix `v` of size `n`x`m`
-void print_mat (const double *v, const size_t n, const size_t m,
-                const size_t ldv, const char *desc);
+void print_mat (const double *restrict v, const size_t n, const size_t m,
+                const size_t ldv, const char *restrict desc);
 
 // Print the eigenvalues and the eigenvectors
-void print_eigs (const double *v, const eigen_infos *w, const size_t n,
-                 const size_t s, const char *desc);
+void print_eigs (const double *restrict v, const eigen_infos *restrict w,
+                 const size_t n, const size_t s, const char *restrict desc);
+
+// Compute the max residual norm on the s eigenvectors
+double residual_norm (const double *restrict a, const double *restrict v,
+                      const eigen_infos *restrict w, const size_t n,
+                      const size_t s);
 
 // Quick clock_gettime wrapper
 double my_timer (void);
@@ -79,7 +86,10 @@ double mean (const double *a, const size_t n);
 double stddev (const double *restrict a, const double mean, const size_t n);
 
 // Read a matrix from a file
-double *read_matrix (const char *filename, size_t *restrict n);
+double *read_matrix (const char *restrict filename, size_t *restrict n);
+
+// Read a mtz file
+double *read_mtz (const char *restrict filename, size_t *restrict n);
 
 // Compute the orthogonality matrix
 void orthogonality_mat (const double *restrict a, double *restrict o,
