@@ -111,7 +111,7 @@ read_mtz (const char *restrict filename, size_t *restrict n)
                     fprintf (stderr, "Ill formed entry %lu. Aborting.\n", _);
                     exit (EXIT_FAILURE);
                 }
-            mat[i * *n + j] = val;
+            mat[(i - 1) * *n + j - 1] = val;
         }
 
     //

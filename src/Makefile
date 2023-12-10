@@ -3,7 +3,7 @@ OFLAGS := -Ofast -march=native -funroll-loops -ftree-vectorize
 IDIR := include
 CFLAGS := -Wall -Werror -pedantic $(OFLAGS) -I$(IDIR)
 LDFLAGS := -lcblas -lm -llapacke
-# LDFLAGS += -fsanitize=address -pg -g
+# LDFLAGS += -fsanitize=address -pg -g3
 EXE := file_test test
 
 .PHONY: all clean clear data
