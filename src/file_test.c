@@ -21,7 +21,7 @@ int
 main (int argc, char *argv[])
 {
     size_t n, m, s, iter_max;
-    double *restrict A, *restrict v, *restrict u, tol;
+    double *restrict A, *restrict v, *restrict v0, *restrict u, tol;
     eigen_infos *restrict w;
     size_t symmetric;
 
@@ -48,13 +48,14 @@ main (int argc, char *argv[])
     //
     ALLOC (u, m * n);
     ALLOC (v, n * (m + 1));
+    ALLOC (v0, n);
     ALLOC (w, m);
 
     // Generate vector for v
-    fill (v, 1.0, n);
+    fill (v0, 1.0, n);
 
     // Calling iram
-    iram (A, &v, n, s, m, iter_max, tol, w, u);
+    iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
 
     // Print the eigenvalues
     for (size_t i = 0; i < s; ++i)
@@ -67,6 +68,7 @@ main (int argc, char *argv[])
     FREE (A);
     FREE (u);
     FREE (v);
+    FREE (v0);
     FREE (w);
 
     //

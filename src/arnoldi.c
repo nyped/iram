@@ -10,8 +10,15 @@ void
 arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
              const size_t jj, const size_t n, const size_t m)
 {
-    // v(0) = v / ||v||
-    cblas_dscal (n, 1.0 / cblas_dnrm2 (n, V (jj), 1), V (jj), 1);
+    // v(jj) = v(jj) / ||v(jj)||
+    const double norm = cblas_dnrm2 (n, V (jj), 1);
+    cblas_dscal (n, 1.0 / norm, V (jj), 1);
+    cblas_dcopy (n, V (jj), 1, V (jj), 1);
+
+    if (jj)
+        {
+            *H (jj, jj - 1) = norm;
+        }
 
     for (size_t j = jj; j < m; ++j)
         {
