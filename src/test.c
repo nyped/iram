@@ -14,22 +14,7 @@ load_mat_diag (size_t n, double *restrict A)
 }
 
 static inline void
-load_mat_tri (size_t n, double *restrict A)
-{
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++)
-            A[i * n + j] = 0;
-
-    for (int i = 0; i < n; i++)
-        {
-            for (int j = i; j < n; j++)
-                A[i * n + j] = rand () % 10;
-            A[i * n + i] = i + 1;
-        }
-}
-
-static inline void
-load_mat_b (size_t n, double *restrict A)
+load_mat_a (size_t n, double *restrict A)
 {
 
     for (int i = 0; i < n; i++)
@@ -56,17 +41,16 @@ load_mat_b (size_t n, double *restrict A)
 static inline void
 usage (const char *restrict bin)
 {
-    fprintf (
-        stderr,
-        "usage: %s n m s iter_max algo tol\n\n"
-        "with:\n"
-        "- n        the target matrix dimension\n"
-        "- m        the projection space dimension\n"
-        "- s        the number of eigenvalues to estimate\n"
-        "- iter_max the maximum number of iterations\n"
-        "- algo     the matrix generation algo in: b, random, diag or tri\n"
-        "- tol      the solution tolerance\n",
-        bin);
+    fprintf (stderr,
+             "usage: %s n m s iter_max algo tol\n\n"
+             "with:\n"
+             "- n        the target matrix dimension\n"
+             "- m        the projection space dimension\n"
+             "- s        the number of eigenvalues to estimate\n"
+             "- iter_max the maximum number of iterations\n"
+             "- algo     the matrix generation algo in: a, random, or diag\n"
+             "- tol      the solution tolerance\n",
+             bin);
 }
 
 int
@@ -99,9 +83,9 @@ main (int argc, char *argv[])
 
     // Generating the matrix A
     ALLOC (A, n * n);
-    if (!strcmp (algo, "b"))
+    if (!strcmp (algo, "a"))
         {
-            load_mat_b (n, A);
+            load_mat_a (n, A);
         }
     else if (!strcmp (algo, "random"))
         {
@@ -110,10 +94,6 @@ main (int argc, char *argv[])
     else if (!strcmp (algo, "diag"))
         {
             load_mat_diag (n, A);
-        }
-    else if (!strcmp (algo, "tri"))
-        {
-            load_mat_tri (n, A);
         }
     else
         {
