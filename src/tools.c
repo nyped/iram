@@ -47,7 +47,7 @@ read_matrix (const char *filename, size_t *restrict n)
 }
 
 double *
-read_mtz (const char *restrict filename, size_t *restrict n)
+read_mtz (const char *restrict filename, size_t *restrict n, const size_t sym)
 {
     FILE *f = fopen (filename, "r");
     double *mat = NULL;
@@ -112,6 +112,8 @@ read_mtz (const char *restrict filename, size_t *restrict n)
                     exit (EXIT_FAILURE);
                 }
             mat[(i - 1) * *n + j - 1] = val;
+            if (sym)
+                mat[(j - 1) * *n + i - 1] = val;
         }
 
     //

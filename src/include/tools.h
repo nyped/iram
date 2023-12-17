@@ -89,7 +89,8 @@ double stddev (const double *restrict a, const double mean, const size_t n);
 double *read_matrix (const char *restrict filename, size_t *restrict n);
 
 // Read a mtz file
-double *read_mtz (const char *restrict filename, size_t *restrict n);
+double *read_mtz (const char *restrict filename, size_t *restrict n,
+                  const size_t sym);
 
 // Compute the orthogonality matrix
 void orthogonality_mat (const double *restrict a, double *restrict o,

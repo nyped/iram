@@ -6,13 +6,14 @@ static inline void
 usage (const char *restrict bin)
 {
     fprintf (stderr,
-             "usage: %s file m s iter_max tol\n\n"
+             "usage: %s file m s iter_max tol sym\n\n"
              "with:\n"
              "- file     the path to a mtz matrix\n"
              "- m        the projection space dimension\n"
              "- s        the number of eigenvalues to estimate\n"
              "- iter_max the maximum number of iterations\n"
-             "- tol      the solution tolerance\n",
+             "- tol      the solution tolerance\n"
+             "- sym      boolean that tells if the matrix is symmetric\n",
              bin);
 }
 
@@ -22,13 +23,15 @@ main (int argc, char *argv[])
     size_t n, m, s, iter_max;
     double *restrict A, *restrict v, *restrict u, tol;
     eigen_infos *restrict w;
+    size_t symmetric;
 
     //
-    if (argc != 6)
+    if (argc != 7)
         return usage (*argv), 255;
 
     //
-    A = read_mtz (argv[1], &n);
+    symmetric = atol (argv[6]);
+    A = read_mtz (argv[1], &n, symmetric);
     s = atol (argv[3]);
     m = atol (argv[2]);
     iter_max = atol (argv[4]);
