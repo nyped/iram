@@ -1,8 +1,8 @@
 CC := gcc
-OFLAGS := -Ofast -march=native -funroll-loops -ftree-vectorize
+OFLAGS := -Ofast -march=native -funroll-loops -ftree-vectorize -fopenmp
 IDIR := include
 CFLAGS := -Wall -Werror -pedantic $(OFLAGS) -I$(IDIR)
-LDFLAGS := -lcblas -lm -llapacke
+LDFLAGS := -lcblas -lm -llapacke -fopenmp
 # LDFLAGS += -fsanitize=address -pg -g3
 EXE := file_test test
 
@@ -12,9 +12,9 @@ all: $(EXE)
 
 %.o: %.c include/%.h
 
-file_test: tools.o arnoldi.o ra.o iram.o qr.o
+file_test: tools.o arnoldi.o ra.o iram.o qr.o miram.o
 
-test: test.o tools.o arnoldi.o ra.o iram.o qr.o
+test: test.o tools.o arnoldi.o ra.o iram.o qr.o miram.o
 
 clean:
 	rm -f *.o

@@ -1,5 +1,6 @@
 #include "iram.h"
 #include "tools.h"
+#include <omp.h>
 #include <stdio.h>
 
 static inline void
@@ -24,6 +25,7 @@ main (int argc, char *argv[])
     double *restrict A, *restrict v, *restrict v0, *restrict u, tol;
     eigen_infos *restrict w;
     size_t symmetric;
+    const size_t nb_threads = omp_get_max_threads ();
 
     //
     if (argc != 7)
@@ -46,7 +48,7 @@ main (int argc, char *argv[])
         return fprintf (stderr, "s <= m <= n\n"), 253;
 
     //
-    ALLOC (u, m * n);
+    ALLOC (u, (m + nb_threads) * n);
     ALLOC (v, n * (m + 1));
     ALLOC (v0, n);
     ALLOC (w, m);

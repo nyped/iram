@@ -41,7 +41,7 @@ iram (const double *restrict A, double *restrict *restrict v,
     printf ("# %10s %10s\n", "nrc", "err");
 
     // Call Ritz Arnoldi
-    ritz_arnoldi (A, *v, n, s, m, &err, u, w, _h, _hh, _ym, _wi, _wr, 0);
+    ritz_arnoldi (A, *v, n, s, m, &err, u, w, _h, m, _hh, _ym, _wi, _wr, 0);
 
     for (size_t iter = 0; iter < iter_max; ++iter)
         {
@@ -53,7 +53,7 @@ iram (const double *restrict A, double *restrict *restrict v,
                 break;
 
             // Call QR on h
-            shifted_qr (_h, m, _Q, w, s, _QQ, _tau);
+            shifted_qr (_h, m, m, _Q, w, s, _QQ, _tau);
 
             /*
              * We have, with v(i) the columns of V:
@@ -78,8 +78,8 @@ iram (const double *restrict A, double *restrict *restrict v,
             cblas_dcopy (n, _fs, 1, *v + n * (s - 1), 1);
 
             // Call Ritz Arnoldi
-            ritz_arnoldi (A, *v, n, s, m, &err, u, w, _h, _hh, _ym, _wi, _wr,
-                          s - 1);
+            ritz_arnoldi (A, *v, n, s, m, &err, u, w, _h, m, _hh, _ym, _wi,
+                          _wr, s - 1);
         }
 
     // Memory management

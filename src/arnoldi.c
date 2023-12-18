@@ -4,11 +4,11 @@
 
 // For readability purposes
 #define V(k) (v + n * (k))
-#define H(i, j) (h + m * (i) + (j))
+#define H(i, j) (h + ldh * (i) + (j))
 
 void
 arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
-             const size_t jj, const size_t n, const size_t m)
+             const size_t ldh, const size_t jj, const size_t n, const size_t m)
 {
     // v(jj) = v(jj) / ||v(jj)||
     const double norm = cblas_dnrm2 (n, V (jj), 1);

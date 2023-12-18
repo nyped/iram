@@ -1,5 +1,7 @@
 #include "iram.h"
+#include "miram.h"
 #include "tools.h"
+#include <omp.h>
 #include <string.h>
 
 static inline void
@@ -60,6 +62,7 @@ main (int argc, char *argv[])
     double *restrict A, *restrict v, *restrict v0, *restrict u, tol;
     eigen_infos *restrict w;
     char *restrict algo;
+    const size_t nb_threads = omp_get_max_threads ();
 
     //
     if (argc != 7)
@@ -102,7 +105,7 @@ main (int argc, char *argv[])
         }
 
     //
-    ALLOC (u, m * n);
+    ALLOC (u, (m + nb_threads) * n);
     ALLOC (v, n * (m + 1));
     ALLOC (v0, n);
     ALLOC (w, m);
@@ -111,7 +114,8 @@ main (int argc, char *argv[])
     fill (v0, 1.0, n);
 
     // Calling iram
-    iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
+    // iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
+    miram (A, v, v0, n, s, m, iter_max, tol, w, u);
 
     // Print the eigenvalues
     for (size_t i = 0; i < s; ++i)

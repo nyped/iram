@@ -26,15 +26,15 @@ void
 ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
               const size_t s, const size_t m, double *restrict err,
               double *restrict u, eigen_infos *restrict w, double *restrict _h,
-              double *restrict _hh, double *restrict _ym, double *restrict _wi,
-              double *restrict _wr, const size_t jj)
+              const size_t ldh, double *restrict _hh, double *restrict _ym,
+              double *restrict _wi, double *restrict _wr, const size_t jj)
 {
     // Call the Arnoldi Reduction
-    arnoldi_mgs (A, v, _h, jj, n, m);
+    arnoldi_mgs (A, v, _h, ldh, jj, n, m);
 
     // Compute the eigenvalues of the Hessenberg matrix H
-    cblas_dcopy (m * (m + 1), _h, 1, _hh, 1);
-    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, _hh, m, _wr, _wi, NULL, 1,
+    cblas_dcopy (ldh * m, _h, 1, _hh, 1);
+    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, _hh, ldh, _wr, _wi, NULL, 1,
                    _ym, m);
 
     // Computing Um = Vm Ym
@@ -46,7 +46,7 @@ ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
      * The idea is to sort the eigenvalues and a list of indices,
      * so we do not move the eigenvectors.
      */
-    const double h_err = _h[m * (m + 1) - 1];
+    const double h_err = _h[ldh * m + m - 1];
     for (size_t i = 0; i < m; i++)
         {
             w[i].re = _wr[i];
