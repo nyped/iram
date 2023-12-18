@@ -52,6 +52,10 @@ main (int argc, char *argv[])
     if (m > n || s > m)
         return fprintf (stderr, "s <= m <= n\n"), 253;
 
+    // FIXME: Implementation quirk
+    if (m < 2)
+        return fprintf (stderr, "m >= 2\n"), 253;
+
     //
     ALLOC (u, (m + nb_threads) * n);
     ALLOC (v, n * (m + 1));

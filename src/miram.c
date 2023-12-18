@@ -17,13 +17,15 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
     double best_er = 1.0e16L;
     bool stop = false;
     size_t count = 0;
+    size_t nrc = 0;
 
     //
     ALLOC (_hbest, m_max * (m_max + 1));
     ALLOC (_vbest, n * (m_max + 1));
 
     // Print the header
-    printf ("# %10s %10s %10s\n", "tid", "nrc", "err");
+    printf ("# %10s %10s %10s %10s\n", "nrc global", "err", "nrc local",
+            "tid");
 
 #pragma omp parallel
     {
@@ -103,7 +105,8 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
                     if (err <= best_er)
                         {
                             // Print the error
-                            printf ("%10zu %10zu % 10e\n", tid, iter, err);
+                            printf ("%10zu % 10e %10zu %10zu\n", nrc, err,
+                                    iter, tid);
 
                             // Call QR on h
                             shifted_qr (_h, m_max, m, _Q, _w, s, _QQ, _tau);
@@ -138,6 +141,7 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
                             cblas_dcopy (n * (s), _v, 1, _vbest, 1);
                             cblas_dcopy (m_max * (s), _h, 1, _hbest, 1);
                             count = 0;
+                            nrc++;
                         }
                     /*
                      * Else, we copy the best subspace into the current one.

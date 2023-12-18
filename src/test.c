@@ -88,6 +88,10 @@ main (int argc, char *argv[])
     if (m > n || s > m)
         return fprintf (stderr, "s <= m <= n\n"), 253;
 
+    // FIXME: Implementation quirk
+    if (m < 2)
+        return fprintf (stderr, "m >= 2\n"), 253;
+
     // Generating the matrix A
     ALLOC (A, n * n);
     if (!strcmp (algo, "a"))
