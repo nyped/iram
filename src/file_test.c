@@ -1,4 +1,5 @@
 #include "iram.h"
+#include "miram.h"
 #include "tools.h"
 #include <omp.h>
 #include <stdio.h>
@@ -7,14 +8,15 @@ static inline void
 usage (const char *restrict bin)
 {
     fprintf (stderr,
-             "usage: %s file m s iter_max tol sym\n\n"
+             "usage: %s file m s iter_max tol sym solver\n\n"
              "with:\n"
              "- file     the path to a mtz matrix\n"
              "- m        the projection space dimension\n"
              "- s        the number of eigenvalues to estimate\n"
              "- iter_max the maximum number of iterations\n"
              "- tol      the solution tolerance\n"
-             "- sym      boolean that tells if the matrix is symmetric\n",
+             "- sym      boolean that tells if the matrix is symmetric\n"
+             "- solver   the solver to use: iram or miram\n",
              bin);
 }
 
@@ -26,9 +28,11 @@ main (int argc, char *argv[])
     eigen_infos *restrict w;
     size_t symmetric;
     const size_t nb_threads = omp_get_max_threads ();
+    char *restrict solver;
+    int ret = 0;
 
     //
-    if (argc != 7)
+    if (argc != 8)
         return usage (*argv), 255;
 
     //
@@ -37,6 +41,7 @@ main (int argc, char *argv[])
     s = atol (argv[3]);
     m = atol (argv[2]);
     iter_max = atol (argv[4]);
+    solver = argv[7];
     if (!sscanf (argv[5], " %lf", &tol) || !A || !s || !m || !iter_max)
         {
             fprintf (stderr, "Error: wrong argument values\n");
@@ -56,8 +61,21 @@ main (int argc, char *argv[])
     // Generate vector for v
     fill (v0, 1.0, n);
 
-    // Calling iram
-    iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
+    // Calling the solver
+    if (!strcmp (solver, "iram"))
+        {
+            iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
+        }
+    else if (!strcmp (solver, "miram"))
+        {
+            miram (A, v, v0, n, s, m, iter_max, tol, w, u);
+        }
+    else
+        {
+            usage (*argv);
+            ret = 252;
+            goto clean_up;
+        }
 
     // Print the eigenvalues
     for (size_t i = 0; i < s; ++i)
@@ -67,6 +85,7 @@ main (int argc, char *argv[])
     printf ("# res    : % 15e\n", residual_norm (A, u, w, n, s));
 
     //
+clean_up:
     FREE (A);
     FREE (u);
     FREE (v);
@@ -74,5 +93,5 @@ main (int argc, char *argv[])
     FREE (w);
 
     //
-    return 0;
+    return ret;
 }
