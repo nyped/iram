@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <time.h>
 
 #define RANDMAX 255
@@ -19,12 +18,12 @@
     do                                                                        \
         {                                                                     \
             ptr = malloc (sizeof (*(ptr)) * size);                            \
-            memset ((ptr), 0, sizeof (*(ptr)) * size);                        \
             if (!(ptr))                                                       \
                 {                                                             \
                     perror ("calloc");                                        \
                     exit (254);                                               \
                 }                                                             \
+            memset ((ptr), 0, sizeof (*(ptr)) * size);                        \
         }                                                                     \
     while (0)
 
@@ -51,6 +50,7 @@ typedef struct
     size_t index; // Index in the vectors infos
 } eigen_infos;
 
+// Bandwidth constants
 #define GIB ((double)(1024 << 20))
 #define MIB ((double)(1024 << 10))
 
@@ -79,19 +79,6 @@ double residual_norm (const double *restrict a, const double *restrict v,
 // Quick clock_gettime wrapper
 double my_timer (void);
 
-// Compute the mean of an array
-double mean (const double *a, const size_t n);
-
-// Compute the stddev of an array
-double stddev (const double *restrict a, const double mean, const size_t n);
-
-// Read a matrix from a file
-double *read_matrix (const char *restrict filename, size_t *restrict n);
-
 // Read a mtz file
 double *read_mtz (const char *restrict filename, size_t *restrict n,
                   const size_t sym);
-
-// Compute the orthogonality matrix
-void orthogonality_mat (const double *restrict a, double *restrict o,
-                        const size_t n);

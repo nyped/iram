@@ -12,9 +12,9 @@ all: $(EXE)
 
 %.o: %.c include/%.h
 
-file_test: tools.o arnoldi.o ra.o iram.o qr.o miram.o
+file_test: tools.o arnoldi.o ra.o iram.o qr.o miram.o kernel.o
 
-test: test.o tools.o arnoldi.o ra.o iram.o qr.o miram.o
+test: test.o tools.o arnoldi.o ra.o iram.o qr.o miram.o kernel.o
 
 clean:
 	rm -f *.o

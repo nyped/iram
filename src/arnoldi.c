@@ -1,5 +1,7 @@
 #include "arnoldi.h"
+#include "kernel.h"
 #include <cblas.h>
+#include <omp.h>
 #include <stdio.h>
 
 // For readability purposes
@@ -15,6 +17,24 @@ arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
     cblas_dscal (n, 1.0 / norm, V (jj), 1);
     cblas_dcopy (n, V (jj), 1, V (jj), 1);
 
+    // Pointer to the dgemv function
+    void (*dgemv_) (CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
+                    const CBLAS_INT M, const CBLAS_INT N, const double alpha,
+                    const double *A, const CBLAS_INT lda, const double *X,
+                    const CBLAS_INT incX, const double beta, double *Y,
+                    const CBLAS_INT incY);
+
+    /*
+     * Choose the dgemv function according to the depth of the
+     * parallel region.
+     * If the depth is 0, we are in the main thread, so we can
+     * use a parallel dgemv.
+     */
+    if (omp_get_level ())
+        dgemv_ = cblas_dgemv;
+    else
+        dgemv_ = dgemv;
+
     if (jj)
         {
             *H (jj, jj - 1) = norm;
@@ -23,8 +43,8 @@ arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
     for (size_t j = jj; j < m; ++j)
         {
             // v(j + 1) = A * v(j)
-            cblas_dgemv (CblasRowMajor, CblasNoTrans, n, n, 1.0, A, n, V (j),
-                         1, 0.0, V (j + 1), 1);
+            dgemv_ (CblasRowMajor, CblasNoTrans, n, n, 1.0, A, n, V (j), 1,
+                    0.0, V (j + 1), 1);
 
             for (size_t i = 0; i <= j; ++i)
                 {

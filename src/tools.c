@@ -12,41 +12,6 @@ fill (double *restrict v, const double a, const size_t n)
 }
 
 double *
-read_matrix (const char *filename, size_t *restrict n)
-{
-    FILE *f = fopen (filename, "r");
-    double *mat;
-
-    //
-    if (!f)
-        {
-            perror ("fopen");
-            exit (EXIT_FAILURE);
-        }
-
-    // Reading the dimension of the matrix
-    if (fscanf (f, " %lu", n))
-        {
-            fprintf (stderr, "Error: missing matrix dimension\n");
-            exit (EXIT_FAILURE);
-        }
-    ALLOC (mat, *n * *n);
-
-    for (size_t i = 0; i < *n * *n; ++i)
-        {
-            if (fscanf (f, "%lf", mat + i) != 1)
-                {
-                    fprintf (stderr, "Error: could not read matrix\n");
-                    exit (EXIT_FAILURE);
-                }
-        }
-
-    fclose (f);
-
-    return mat;
-}
-
-double *
 read_mtz (const char *restrict filename, size_t *restrict n, const size_t sym)
 {
     FILE *f = fopen (filename, "r");
@@ -366,45 +331,6 @@ residual_norm (const double *restrict a, const double *restrict v,
 
     //
     return max_res;
-}
-
-double
-mean (const double *a, const size_t n)
-{
-    double m = 0.0;
-
-    for (size_t i = 0; i < n; i++)
-        m += a[i];
-
-    m /= (double)n;
-
-    return m;
-}
-
-double
-stddev (const double *restrict a, const double mean, const size_t n)
-{
-    double d = 0.0;
-
-    for (size_t i = 0; i < n; i++)
-        d += (a[i] - mean) * (a[i] - mean);
-
-    d /= (double)n;
-
-    return sqrt (d);
-}
-
-void
-orthogonality_mat (const double *restrict a, double *restrict o,
-                   const size_t n)
-{
-    /*
-     * Computing the dot product between each pair of vector.
-     * This is equivalent to computing the matrix product
-     * between the matrix and its transpose.
-     */
-    cblas_dgemm (CblasRowMajor, CblasNoTrans, CblasTrans, n, n, n, 1, a, n, a,
-                 n, 0, o, n);
 }
 
 double

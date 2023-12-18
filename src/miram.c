@@ -5,8 +5,8 @@
 #include <stdbool.h>
 
 void
-miram (const double *restrict A, double *restrict v, double *restrict v0,
-       const size_t n, const size_t s, const size_t m0, const size_t iter_max,
+miram (const double *restrict A, double *restrict v0, const size_t n,
+       const size_t s, const size_t m0, const size_t iter_max,
        const double tol, eigen_infos *restrict w, double *restrict u)
 {
     const size_t nb_threads = omp_get_max_threads ();
@@ -40,7 +40,6 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
         double *restrict _ym;
         double *restrict _tau;
         double *restrict _fs, *restrict _fm;
-        double *restrict _u;
         eigen_infos *restrict _w;
 
         // Allocation
@@ -50,21 +49,23 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
         ALLOC (_fs, n);
         ALLOC (_h, m_max * (m_max + 1));
         ALLOC (_hh, m_max * (m_max + 1));
-        ALLOC (_tau, m_max);
-        ALLOC (_vv, n * (m_max + 1));
-        ALLOC (_v, n * (m_max + 1));
-        ALLOC (_wi, m_max);
-        ALLOC (_wr, m_max);
+        ALLOC (_tau, m);
+        ALLOC (_vv, n * (m + 1));
+        ALLOC (_v, n * (m + 1));
+        ALLOC (_wi, m);
+        ALLOC (_wr, m);
         ALLOC (_w, m);
-        ALLOC (_ym, m_max * m_max);
-        ALLOC (_u, m * n);
+        ALLOC (_ym, m * m);
+
+        // Start timer
+        const double t1 = my_timer ();
 
         // Copy v0 into v
         cblas_dcopy (n, v0, 1, _v, 1);
 
         // Call Ritz Arnoldi
-        ritz_arnoldi (A, _v, n, s, m, &err, _u, _w, _h, m_max, _hh, _ym, _wi,
-                      _wr, 0);
+        ritz_arnoldi (A, _v, n, s, m, &err, _w, _h, m_max, _hh, _ym, _wi, _wr,
+                      0);
 
         //
         for (size_t iter = 0; iter < iter_max; ++iter)
@@ -80,8 +81,8 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
                         stop = true;
 
                         // Copy the result
+                        translate_eigv (_v, _ym, u, m, n);
                         memcpy (w, _w, s * sizeof (*w));
-                        cblas_dcopy (m * n, _u, 1, u, 1);
 
                         break;
                     }
@@ -124,10 +125,8 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
                             SWAP_PTR (_v, _vv);
 
                             // beta = h(s + 1, s), sigma = Q(m, s)
-                            const double beta
-                                = _h[m_max * (s - 1) + s - 1 - 1];
-                            const double sigma
-                                = _Q[m_max * (m - 1) + s - 1 - 1];
+                            const double beta = _h[m_max * (s - 1) + s - 2];
+                            const double sigma = _Q[m_max * (m - 1) + s - 2];
 
                             // fs = beta fs + sigma fm
                             cblas_dcopy (n, _vv + n * (m - 1), 1, _fm, 1);
@@ -155,9 +154,16 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
                 }
 
                 // Call Ritz Arnoldi
-                ritz_arnoldi (A, _v, n, s, m, &err, _u, _w, _h, m_max, _hh,
-                              _ym, _wi, _wr, s - 1);
+                ritz_arnoldi (A, _v, n, s, m, &err, _w, _h, m_max, _hh, _ym,
+                              _wi, _wr, s - 1);
             }
+
+            // End timer
+#pragma omp master
+        {
+            const double t2 = my_timer ();
+            printf ("# time   : % 15.4lfs\n", t2 - t1);
+        }
 
         //
         FREE (_Q);
@@ -173,7 +179,6 @@ miram (const double *restrict A, double *restrict v, double *restrict v0,
         FREE (_wr);
         FREE (_w);
         FREE (_ym);
-        FREE (_u);
     }
 
     //

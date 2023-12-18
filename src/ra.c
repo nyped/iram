@@ -23,11 +23,19 @@ cmp (const void *a, const void *b)
 }
 
 void
+translate_eigv (const double *restrict v, const double *restrict y,
+                double *restrict u, const size_t m, const size_t n)
+{
+    cblas_dgemm (CblasRowMajor, CblasTrans, CblasNoTrans, m, n, m, 1.0, y, m,
+                 v, n, 0.0, u, n);
+}
+
+void
 ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
               const size_t s, const size_t m, double *restrict err,
-              double *restrict u, eigen_infos *restrict w, double *restrict _h,
-              const size_t ldh, double *restrict _hh, double *restrict _ym,
-              double *restrict _wi, double *restrict _wr, const size_t jj)
+              eigen_infos *restrict w, double *restrict _h, const size_t ldh,
+              double *restrict _hh, double *restrict _ym, double *restrict _wi,
+              double *restrict _wr, const size_t jj)
 {
     // Call the Arnoldi Reduction
     arnoldi_mgs (A, v, _h, ldh, jj, n, m);
@@ -36,10 +44,6 @@ ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
     cblas_dcopy (ldh * m, _h, 1, _hh, 1);
     LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, _hh, ldh, _wr, _wi, NULL, 1,
                    _ym, m);
-
-    // Computing Um = Vm Ym
-    cblas_dgemm (CblasRowMajor, CblasTrans, CblasNoTrans, m, n, m, 1.0, _ym, m,
-                 v, n, 0.0, u, n);
 
     /*
      * Sorting the vectors.

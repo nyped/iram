@@ -60,7 +60,7 @@ int
 main (int argc, char *argv[])
 {
     size_t n, m, s, iter_max;
-    double *restrict A, *restrict v, *restrict v0, *restrict u, tol;
+    double *restrict A, *restrict v0, *restrict u, tol;
     eigen_infos *restrict w;
     char *restrict algo;
     char *restrict solver;
@@ -114,21 +114,20 @@ main (int argc, char *argv[])
 
     //
     ALLOC (u, (m + nb_threads) * n);
-    ALLOC (v, n * (m + 1));
     ALLOC (v0, n);
     ALLOC (w, m);
 
-    // Generate vector for v
+    // Generate vector for v0
     fill (v0, 1.0, n);
 
     // Calling the solver
     if (!strcmp (solver, "iram"))
         {
-            iram (A, &v, v0, n, s, m, iter_max, tol, w, u);
+            iram (A, v0, n, s, m, iter_max, tol, w, u);
         }
     else if (!strcmp (solver, "miram"))
         {
-            miram (A, v, v0, n, s, m, iter_max, tol, w, u);
+            miram (A, v0, n, s, m, iter_max, tol, w, u);
         }
     else
         {
@@ -148,7 +147,6 @@ main (int argc, char *argv[])
 clean_up:
     FREE (A);
     FREE (u);
-    FREE (v);
     FREE (v0);
     FREE (w);
 
