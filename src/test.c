@@ -44,22 +44,26 @@ static inline void
 usage (const char *restrict bin)
 {
     fprintf (stderr,
-             "usage: %s n m s iter_max algo tol solver\n\n"
+             "usage: %s n m s iter_max algo tol solver [delta_m]\n\n"
              "with:\n"
              "- n        the target matrix dimension\n"
              "- m        the projection space dimension\n"
+             "           If the solver is miram, this will be"
+             "           the dimension of the smaller mi\n"
              "- s        the number of eigenvalues to estimate\n"
              "- iter_max the maximum number of iterations\n"
              "- algo     the matrix generation algo in: a, random, or diag\n"
              "- tol      the solution tolerance\n"
-             "- solver   the solver to use: iram or miram\n",
+             "- solver   the solver to use: iram or miram\n"
+             "- delta_m  the offset between each mi when iram is used.\n"
+             "           This is set to 1 by default.\n",
              bin);
 }
 
 int
 main (int argc, char *argv[])
 {
-    size_t n, m, s, iter_max;
+    size_t n, m, s, iter_max, delta_m;
     double *restrict A, *restrict v0, *restrict u, tol;
     eigen_infos *restrict w;
     char *restrict algo;
@@ -68,7 +72,7 @@ main (int argc, char *argv[])
     int ret = 0;
 
     //
-    if (argc != 8)
+    if (argc != 8 && argc != 9)
         return usage (*argv), 255;
 
     //
@@ -83,6 +87,10 @@ main (int argc, char *argv[])
             fprintf (stderr, "Error: wrong argument values\n");
             return 254;
         }
+    if (argc == 9)
+        delta_m = atol (argv[8]);
+    else
+        delta_m = 1;
 
     //
     if (m > n || s > m)
@@ -113,7 +121,7 @@ main (int argc, char *argv[])
         }
 
     //
-    ALLOC (u, (m + nb_threads) * n);
+    ALLOC (u, (m + nb_threads * delta_m) * n);
     ALLOC (v0, n);
     ALLOC (w, m);
 
@@ -127,7 +135,7 @@ main (int argc, char *argv[])
         }
     else if (!strcmp (solver, "miram"))
         {
-            miram (A, v0, n, s, m, iter_max, tol, w, u);
+            miram (A, v0, n, s, m, delta_m, iter_max, tol, w, u);
         }
     else
         {

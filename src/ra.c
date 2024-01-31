@@ -42,7 +42,7 @@ ritz_arnoldi (const double *restrict A, double *restrict v, const size_t n,
 
     // Compute the eigenvalues of the Hessenberg matrix H
     cblas_dcopy (ldh * m, _h, 1, _hh, 1);
-    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, _hh, ldh, _wr, _wi, NULL, 1,
+    LAPACKE_dgeev (LAPACK_ROW_MAJOR, 'N', 'V', m, _hh, ldh, _wr, _wi, NULL, m,
                    _ym, m);
 
     /*

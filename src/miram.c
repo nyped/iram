@@ -6,15 +6,16 @@
 
 void
 miram (const double *restrict A, double *restrict v0, const size_t n,
-       const size_t s, const size_t m0, const size_t iter_max,
-       const double tol, eigen_infos *restrict w, double *restrict u)
+       const size_t s, const size_t m0, const size_t delta_m,
+       const size_t iter_max, const double tol, eigen_infos *restrict w,
+       double *restrict u)
 {
     const size_t nb_threads = omp_get_max_threads ();
-    const size_t m_max = m0 + nb_threads;
+    const size_t m_max = m0 + nb_threads * delta_m;
     double *restrict _hbest, *restrict _vbest;
 
     // Shared variables
-    double best_er = 1.0e16L;
+    double best_err = 1.0e16L;
     bool stop = false;
     size_t count = 0;
     size_t nrc = 0;
@@ -23,6 +24,12 @@ miram (const double *restrict A, double *restrict v0, const size_t n,
     ALLOC (_hbest, m_max * (m_max + 1));
     ALLOC (_vbest, n * (m_max + 1));
 
+    // Print the mi number for debugging purposes
+    printf ("# mi: ");
+    for (size_t i = 0; i < nb_threads; ++i)
+        printf ("%zu ", m0 + i * delta_m);
+    printf ("\n");
+
     // Print the header
     printf ("# %10s %10s %10s %10s\n", "nrc global", "err", "nrc local",
             "tid");
@@ -30,7 +37,7 @@ miram (const double *restrict A, double *restrict v0, const size_t n,
 #pragma omp parallel
     {
         const size_t tid = omp_get_thread_num ();
-        const size_t m = m0 + tid;
+        const size_t m = m0 + tid * delta_m;
 
         double err = 0;
         double *restrict _Q, *restrict _QQ;
@@ -96,14 +103,14 @@ miram (const double *restrict A, double *restrict v0, const size_t n,
                      */
                     if (count > nb_threads)
                         {
-                            best_er = 1.0e16L;
+                            best_err = 1.0e16L;
                         }
 
                     /*
                      * If we have a better error, we consider the current
                      * subspace as the best one.
                      */
-                    if (err <= best_er)
+                    if (err <= best_err)
                         {
                             // Print the error
                             printf ("%10zu % 10e %10zu %10zu\n", nrc, err,
@@ -136,7 +143,7 @@ miram (const double *restrict A, double *restrict v0, const size_t n,
                             cblas_dcopy (n, _fs, 1, _v + n * (s - 1), 1);
 
                             //
-                            best_er = err;
+                            best_err = err;
                             cblas_dcopy (n * (s), _v, 1, _vbest, 1);
                             cblas_dcopy (m_max * (s), _h, 1, _hbest, 1);
                             count = 0;
@@ -158,7 +165,11 @@ miram (const double *restrict A, double *restrict v0, const size_t n,
                               _wi, _wr, s - 1);
             }
 
-            // End timer
+            // Stop the other threads
+#pragma omp critical
+        stop = true;
+
+        // End timer
 #pragma omp master
         {
             const double t2 = my_timer ();

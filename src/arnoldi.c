@@ -2,6 +2,7 @@
 #include "kernel.h"
 #include <cblas.h>
 #include <omp.h>
+#include <stdint.h>
 #include <stdio.h>
 
 // For readability purposes
@@ -19,10 +20,10 @@ arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
 
     // Pointer to the dgemv function
     void (*dgemv_) (CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
-                    const CBLAS_INT M, const CBLAS_INT N, const double alpha,
-                    const double *A, const CBLAS_INT lda, const double *X,
-                    const CBLAS_INT incX, const double beta, double *Y,
-                    const CBLAS_INT incY);
+                    const int32_t M, const int32_t N, const double alpha,
+                    const double *A, const int32_t lda, const double *X,
+                    const int32_t incX, const double beta, double *Y,
+                    const int32_t incY);
 
     /*
      * Choose the dgemv function according to the depth of the
