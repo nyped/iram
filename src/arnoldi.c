@@ -2,8 +2,9 @@
 #include "kernel.h"
 #include <cblas.h>
 #include <omp.h>
-#include <stdint.h>
+#if 0
 #include <stdio.h>
+#endif // 0
 
 // For readability purposes
 #define V(k) (v + n * (k))
@@ -18,24 +19,6 @@ arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
     cblas_dscal (n, 1.0 / norm, V (jj), 1);
     cblas_dcopy (n, V (jj), 1, V (jj), 1);
 
-    // Pointer to the dgemv function
-    void (*dgemv_) (CBLAS_LAYOUT layout, CBLAS_TRANSPOSE TransA,
-                    const int32_t M, const int32_t N, const double alpha,
-                    const double *A, const int32_t lda, const double *X,
-                    const int32_t incX, const double beta, double *Y,
-                    const int32_t incY);
-
-    /*
-     * Choose the dgemv function according to the depth of the
-     * parallel region.
-     * If the depth is 0, we are in the main thread, so we can
-     * use a parallel dgemv.
-     */
-    if (omp_get_level ())
-        dgemv_ = cblas_dgemv;
-    else
-        dgemv_ = dgemv;
-
     if (jj)
         {
             *H (jj, jj - 1) = norm;
@@ -44,8 +27,8 @@ arnoldi_mgs (const double *restrict A, double *restrict v, double *restrict h,
     for (size_t j = jj; j < m; ++j)
         {
             // v(j + 1) = A * v(j)
-            dgemv_ (CblasRowMajor, CblasNoTrans, n, n, 1.0, A, n, V (j), 1,
-                    0.0, V (j + 1), 1);
+            dgemv (CblasRowMajor, CblasNoTrans, n, n, 1.0, A, n, V (j), 1, 0.0,
+                   V (j + 1), 1);
 
             for (size_t i = 0; i <= j; ++i)
                 {

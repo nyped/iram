@@ -1,9 +1,6 @@
 #include "qr.h"
-#include "arnoldi.h"
 #include "tools.h"
 #include <lapacke.h>
-#include <math.h>
-#include <stdio.h>
 
 void
 shifted_qr (double *restrict h, const size_t ldh, const size_t m,

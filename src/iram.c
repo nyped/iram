@@ -3,7 +3,6 @@
 #include "ra.h"
 #include "tools.h"
 #include <cblas.h>
-#include <math.h>
 #include <stddef.h>
 
 void
